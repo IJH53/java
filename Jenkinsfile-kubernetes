@@ -1,4 +1,4 @@
- pipeline { 
+pipeline { 
   agent { 
     kubernetes { 
       yaml ''' 
@@ -49,62 +49,51 @@ branch: 'main', url: '<URL>'
     stage('Build') { 
       steps { 
         container('maven') { 
-          sh 
-'mvn clean package -DskipTests=true' 
+          sh 'mvn clean package -DskipTests=true' 
         } 
       } 
     } 
     stage('Test') { 
       steps { 
         container('maven') { 
-          sh 
-'mvn test' 
+          sh 'mvn test' 
         } 
       } 
     } 
     stage('Build & Tag & Push Docker Image') { 
       steps { 
         container('kaniko') { 
-          sh 
-2024-08-06
- 'executor --dockerfile=Dockerfile -
+          sh 'executor --dockerfile=Dockerfile --
 context=dir:///home/jenkins/agent/workspace/kube_pipeline/ --destination=
- <IMAGE>:$BUILD_NUMBER --destination=<IMAGE>:latest'
+<IMAGE>:$BUILD_NUMBER --destination=<IMAGE>:latest'
         } 
       } 
     } 
     stage('Update K8s Manifests & Push') { 
       environment { 
-        githubUser = '<GITHUB_YOURNAME>' //Ryan Jang 
-        githubEmail = '<GITHUB_EMAIL>' //c1t1d0s7@example.com 
-        githubId = '<GITHUB_USERNAME>' //c1t1d0s7  
-        githubRepo = '<GITHUB_REPO_NAME>' //jenkins-kube-deploy 
-        githubURL = "https://github.com/${githubId}/${githubRepo}.git" 
-        dockerhubId = '<DOCKER_HUB_USERNAME>' //c1t1d0s7 
-        dockerhubRepo = '<DOCKER_HUB_REPO_NAME>' //hello-world 
+        githubUser = 'Lee JahHoon' //Ryan Jang 
+        githubEmail = 'dlwogns54@naver.com' //c1t1d0s7@example.com 
+        githubId = 'IJH53' //c1t1d0s7  
+        githubRepo = 'java' //jenkins-kube-deploy 
+        githubURL = "https://github.com/IJH53/java.git" 
+        dockerhubId = 'ulrb' //c1t1d0s7 
+        dockerhubRepo = 'For Jenkins' //hello-world 
       } 
       steps { 
         container('git') { 
-          git 
-branch: 'main', credentialsId: 'github-credential', url: 
+          git branch: 'main', credentialsId: 'github-credential', url: 
 "${githubURL}" 
-          sh 
-"git config --global --add safe.directory ${workspace}" 
-          sh 
-          sh 
-          sh 
-"git config --global user.name ${githubUser}" 
-"git config --global user.email ${githubEmail}" 
-'sed -i "s/image:.*/image: 
+          sh "git config --global --add safe.directory ${workspace}" 
+          sh "git config --global user.name ${githubUser}" 
+          sh "git config --global user.email ${githubEmail}" 
+          sh 'sed -i "s/image:.*/image: 
+
 ${dockerhubId}\\/${dockerhubRepo}:${BUILD_NUMBER}/g" deployment.yaml' 
-          sh 
-'git add deployment.yaml' 
-          sh 
-'git commit -m "Jenkins Build Number - ${BUILD_NUMBER}"' 
+          sh 'git add deployment.yaml' 
+          sh 'git commit -m "Jenkins Build Number - ${BUILD_NUMBER}"' 
           withCredentials([gitUsernamePassword(credentialsId: 'github
 credential', gitToolName: 'Default')]) { 
-            sh 
-'git push --set-upstream origin main' 
+            sh 'git push --set-upstream origin main' 
           } 
         } 
       } 
